@@ -1,0 +1,327 @@
+/* Custom styles for Yasaman Safarkhanlo's website */
+
+/* Enhanced typography and spacing */
+.intro-highlights {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid #007bff;
+}
+
+.intro-highlights p {
+    margin: 10px 0;
+    font-size: 1.1em;
+}
+
+/* Feature icons */
+.feature-icon {
+    font-size: 3em;
+    display: block;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Enhanced lists */
+.research-highlights,
+.project-highlights,
+.collaboration-highlights {
+    list-style: none;
+    padding: 0;
+    margin: 15px 0;
+}
+
+.research-highlights li,
+.project-highlights li,
+.collaboration-highlights li {
+    padding: 8px 0 8px 25px;
+    position: relative;
+    color: #666;
+    font-size: 0.95em;
+}
+
+.research-highlights li:before,
+.project-highlights li:before,
+.collaboration-highlights li:before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: #007bff;
+    font-weight: bold;
+}
+
+/* Skills grid */
+.skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.skill-category {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.skill-category h4 {
+    color: #007bff;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.skill-category p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9em;
+}
+
+/* Interests section */
+.interests-list {
+    margin-top: 20px;
+}
+
+.interest-item {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.interest-item:last-child {
+    border-bottom: none;
+}
+
+.interest-item h4 {
+    color: #007bff;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.interest-item p {
+    margin: 0;
+    color: #666;
+    font-size: 0.95em;
+    line-height: 1.6;
+}
+
+/* Projects page specific styles */
+.project-section {
+    margin: 40px 0;
+    padding: 30px 0;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.project-section:last-child {
+    border-bottom: none;
+}
+
+.project-section h3 {
+    color: #007bff;
+    border-bottom: 3px solid #007bff;
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+    font-size: 1.8em;
+}
+
+.project {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border-left: 4px solid #007bff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.project h4 {
+    color: #333;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.project p {
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+.project p strong {
+    color: #007bff;
+    font-weight: 600;
+}
+
+.project em {
+    color: #666;
+    font-style: italic;
+}
+
+.project a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.project a:hover {
+    text-decoration: underline;
+}
+
+/* Call to action section */
+.call-to-action {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    margin: 40px 0;
+}
+
+.call-to-action h3 {
+    color: white;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+.call-to-action p {
+    font-size: 1.1em;
+    margin-bottom: 25px;
+    opacity: 0.9;
+}
+
+/* Research page specific styles */
+.publication {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid #28a745;
+}
+
+.publication h4 {
+    color: #28a745;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+}
+
+.publication p {
+    margin: 0;
+    color: #666;
+    line-height: 1.6;
+}
+
+.publication em {
+    font-style: italic;
+    color: #888;
+}
+
+/* Button enhancements */
+.button.button-style2 {
+    background: transparent;
+    border: 2px solid #007bff;
+    color: #007bff;
+}
+
+.button.button-style2:hover {
+    background: #007bff;
+    color: white;
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+    .skills-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .intro-highlights {
+        padding: 15px;
+        margin: 15px 0;
+    }
+    
+    .feature-icon {
+        font-size: 2.5em;
+    }
+    
+    .project {
+        padding: 20px;
+    }
+    
+    .call-to-action {
+        padding: 30px 20px;
+    }
+    
+    .project-section {
+        margin: 30px 0;
+        padding: 20px 0;
+    }
+}
+
+/* Enhanced navigation */
+#nav ul li.active a {
+    background: #007bff;
+    color: white;
+    border-radius: 4px;
+}
+
+#nav ul li a:hover {
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+/* Contact section enhancements */
+.contact li a {
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.contact li a:hover {
+    transform: translateY(-2px);
+    color: #007bff;
+}
+
+/* Footer improvements */
+#footer .byline {
+    font-size: 1.1em;
+    color: #666;
+    margin-top: 10px;
+    display: block;
+}
+
+/* Sidebar enhancements */
+#sidebar .style li {
+    background: #f8f9fa;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 3px solid #007bff;
+}
+
+#sidebar .style li .posted {
+    color: #007bff;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* Animation enhancements */
+.project, .skill-category, .interest-item, .publication {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project:hover, .skill-category:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Print styles */
+@media print {
+    .intro-highlights,
+    .skills-grid,
+    .project,
+    .publication {
+        break-inside: avoid;
+    }
+    
+    .call-to-action {
+        background: #f8f9fa !important;
+        color: #333 !important;
+        border: 1px solid #ddd;
+    }
+}
