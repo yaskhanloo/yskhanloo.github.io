@@ -907,60 +907,63 @@
         function renderMiniGoals(categoryKey, categoryData) {
             const allGoals = [...categoryData.miniGoals, ...categoryData.customGoals];
             
-            return allGoals.map((goal, index) => `
-                <div class="mini-goal-item">
-                    <input type="checkbox" 
-                           class="mini-goal-checkbox" 
-                           ${goal.completed ? 'checked' : ''} 
-                           onchange="toggleGoal('${categoryKey}', ${index})">
-                    <span class="mini-goal-text ${goal.completed ? 'completed' : ''}">${goal.text}</span>
-                    ${goal.completedDate ? `<span class="mini-goal-date">✓ ${new Date(goal.completedDate).toLocaleDateString()}</span>` : ''}
-                </div>
-            `).join('');
+            return allGoals.map((goal, index) => {
+                const isCustom = index >= categoryData.miniGoals.length;
+                const actualIndex = isCustom ? index - categoryData.miniGoals.length : index;
+                
+                return `
+                    <div class="mini-goal-item">
+                        <input type="checkbox" class="mini-goal-checkbox" 
+                               ${goal.completed ? 'checked' : ''} 
+                               onchange="toggleGoal('${categoryKey}', ${actualIndex}, ${isCustom})">
+                        <span class="mini-goal-text ${goal.completed ? 'completed' : ''}">${goal.text}</span>
+                        ${goal.completedDate ? `<span class="mini-goal-date">${new Date(goal.completedDate).toLocaleDateString()}</span>` : ''}
+                        ${isCustom ? `<button onclick="removeCustomGoal('${categoryKey}', ${actualIndex})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; margin-left: 10px; cursor: pointer;">×</button>` : ''}
+                    </div>
+                `;
+            }).join('');
         }
 
         // Render weight tracker for health category
         function renderWeightTracker() {
             const currentWeight = localStorage.getItem('currentWeight') || '100';
             const targetWeight = '80';
+            const progress = Math.max(0, Math.min(100, ((100 - currentWeight) / (100 - targetWeight)) * 100));
             
             return `
                 <div class="weight-tracker">
-                    <div class="weight-current">${currentWeight} kg</div>
-                    <div class="weight-goal">Target: ${targetWeight} kg by Jan 2026</div>
-                    <button onclick="updateWeight()" style="background: rgba(255,255,255,0.3); color: white; border: none; padding: 8px 16px; border-radius: 15px; margin-top: 10px; cursor: pointer;">Update Weight</button>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div class="weight-current">${currentWeight}kg</div>
+                            <div class="weight-goal">Goal: ${targetWeight}kg by Jan 2026</div>
+                        </div>
+                        <button onclick="updateWeight()" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white; padding: 10px 20px; border-radius: 10px; cursor: pointer;">Update</button>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.2); height: 8px; border-radius: 10px; margin-top: 15px;">
+                        <div style="background: white; height: 100%; width: ${progress}%; border-radius: 10px; transition: width 0.5s;"></div>
+                    </div>
                 </div>
             `;
         }
 
         // Toggle goal completion
-        function toggleGoal(categoryKey, goalIndex) {
-            const categoryData = goalsData[categoryKey];
-            const allGoals = [...categoryData.miniGoals, ...categoryData.customGoals];
-            const goal = allGoals[goalIndex];
+        function toggleGoal(categoryKey, goalIndex, isCustom) {
+            const goalArray = isCustom ? goalsData[categoryKey].customGoals : goalsData[categoryKey].miniGoals;
+            const goal = goalArray[goalIndex];
             
             goal.completed = !goal.completed;
             goal.completedDate = goal.completed ? new Date().toISOString() : null;
             
-            // Update the data structure
-            if (goalIndex < categoryData.miniGoals.length) {
-                categoryData.miniGoals[goalIndex] = goal;
-            } else {
-                const customIndex = goalIndex - categoryData.miniGoals.length;
-                categoryData.customGoals[customIndex] = goal;
-            }
-            
             saveGoalsData();
-            
-            // Animate completion
-            if (goal.completed) {
-                const goalElement = event.target.closest('.mini-goal-item');
-                goalElement.classList.add('goal-completed');
-                setTimeout(() => goalElement.classList.remove('goal-completed'), 600);
-            }
-            
             renderGoalsGrid();
             updateStats();
+            
+            // Add celebration animation for completion
+            if (goal.completed) {
+                const categoryElement = document.querySelector(`.category-${categoryKey}`);
+                categoryElement.classList.add('goal-completed');
+                setTimeout(() => categoryElement.classList.remove('goal-completed'), 600);
+            }
         }
 
         // Add custom goal
@@ -982,6 +985,16 @@
             updateStats();
         }
 
+        // Remove custom goal
+        function removeCustomGoal(categoryKey, goalIndex) {
+            if (!confirm('Remove this goal?')) return;
+            
+            goalsData[categoryKey].customGoals.splice(goalIndex, 1);
+            saveGoalsData();
+            renderGoalsGrid();
+            updateStats();
+        }
+
         // Update weight
         function updateWeight() {
             const newWeight = prompt('Enter your current weight (kg):');
@@ -991,216 +1004,201 @@
             }
         }
 
-        // View switching
-        function showView(viewName) {
-            currentView = viewName;
+        // Update statistics
+        function updateStats() {
+            let totalGoals = 0;
+            let completedGoals = 0;
+            let completedToday = 0;
             
-            // Update nav tabs
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
+            const today = new Date().toDateString();
+            
+            Object.keys(goalsData).forEach(categoryKey => {
+                const categoryData = goalsData[categoryKey];
+                const allGoals = [...categoryData.miniGoals, ...categoryData.customGoals];
+                
+                totalGoals += allGoals.length;
+                allGoals.forEach(goal => {
+                    if (goal.completed) {
+                        completedGoals++;
+                        if (goal.completedDate && new Date(goal.completedDate).toDateString() === today) {
+                            completedToday++;
+                        }
+                    }
+                });
             });
+            
+            const overallProgress = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0;
+            const streak = calculateStreak();
+            
+            document.getElementById('totalProgress').textContent = `${overallProgress}%`;
+            document.getElementById('completedToday').textContent = completedToday;
+            document.getElementById('activeGoals').textContent = totalGoals - completedGoals;
+            document.getElementById('weekStreak').textContent = streak;
+        }
+
+        // Calculate streak (simplified)
+        function calculateStreak() {
+            const journalData = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {};
+            const dates = Object.keys(journalData).sort().reverse();
+            
+            let streak = 0;
+            const today = new Date();
+            
+            for (let i = 0; i < dates.length; i++) {
+                const date = new Date(dates[i]);
+                const diffDays = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+                
+                if (diffDays === i) {
+                    streak++;
+                } else {
+                    break;
+                }
+            }
+            
+            return streak;
+        }
+
+        // View switching
+        function showView(viewType) {
+            currentView = viewType;
+            
+            // Update active tab
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
             
-            // Show/hide sections
-            document.getElementById('goalsGrid').style.display = viewName === 'journal' ? 'none' : 'grid';
-            document.getElementById('statsDashboard').style.display = viewName === 'journal' ? 'none' : 'grid';
-            document.getElementById('journalSection').style.display = viewName === 'journal' ? 'block' : 'none';
+            const goalsGrid = document.getElementById('goalsGrid');
+            const statsBoard = document.getElementById('statsDashboard');
+            const journalSection = document.getElementById('journalSection');
             
-            if (viewName === 'today') {
-                showTodaysTasks();
-            } else if (viewName === 'stats') {
-                showDetailedStats();
-            } else if (viewName === 'all') {
-                renderGoalsGrid();
+            // Hide all sections first
+            goalsGrid.style.display = 'none';
+            statsBoard.style.display = 'none';
+            journalSection.style.display = 'none';
+            
+            switch(viewType) {
+                case 'all':
+                    goalsGrid.style.display = 'grid';
+                    statsBoard.style.display = 'grid';
+                    break;
+                case 'today':
+                    renderTodayTasks();
+                    goalsGrid.style.display = 'grid';
+                    statsBoard.style.display = 'grid';
+                    break;
+                case 'stats':
+                    renderDetailedStats();
+                    statsBoard.style.display = 'grid';
+                    break;
+                case 'journal':
+                    journalSection.style.display = 'block';
+                    loadJournal();
+                    break;
             }
         }
 
-        // Show today's tasks
-        function showTodaysTasks() {
+        // Render today's tasks
+        function renderTodayTasks() {
             const grid = document.getElementById('goalsGrid');
-            const today = new Date().toDateString();
+            grid.innerHTML = '';
             
-            // Get incomplete goals for today's focus
-            const todaysTasks = [];
-            Object.keys(GOAL_CATEGORIES).forEach(categoryKey => {
+            // Filter categories that have incomplete goals
+            const activeCategories = Object.keys(GOAL_CATEGORIES).filter(categoryKey => {
+                const categoryData = goalsData[categoryKey];
+                const allGoals = [...categoryData.miniGoals, ...categoryData.customGoals];
+                return allGoals.some(goal => !goal.completed);
+            });
+            
+            activeCategories.forEach(categoryKey => {
                 const category = GOAL_CATEGORIES[categoryKey];
                 const categoryData = goalsData[categoryKey];
                 const incompleteGoals = [...categoryData.miniGoals, ...categoryData.customGoals]
                     .filter(goal => !goal.completed);
                 
-                if (incompleteGoals.length > 0) {
-                    todaysTasks.push({
-                        category: categoryKey,
-                        categoryData: category,
-                        goals: incompleteGoals
-                    });
-                }
-            });
-            
-            grid.innerHTML = `
-                <div style="grid-column: 1 / -1; background: rgba(255,255,255,0.95); padding: 30px; border-radius: 20px; text-align: center;">
-                    <h2 style="color: #333; margin-bottom: 20px;">🌅 Today's Focus</h2>
-                    <p style="color: #666; margin-bottom: 30px;">Pick 3-5 mini-goals to focus on today</p>
-                    <div style="display: grid; gap: 20px;">
-                        ${todaysTasks.map(task => `
-                            <div style="background: ${task.categoryData.color}15; padding: 20px; border-radius: 15px; border-left: 4px solid ${task.categoryData.color};">
-                                <h3 style="color: #333; margin-bottom: 15px;">${task.categoryData.icon} ${task.categoryData.title}</h3>
-                                ${task.goals.slice(0, 2).map((goal, index) => `
-                                    <div class="mini-goal-item">
-                                        <input type="checkbox" class="mini-goal-checkbox" onchange="toggleGoalInCategory('${task.category}', '${goal.text}')">
-                                        <span class="mini-goal-text">${goal.text}</span>
-                                    </div>
-                                `).join('')}
+                if (incompleteGoals.length === 0) return;
+                
+                const categoryHTML = `
+                    <div class="goal-category category-${categoryKey}" style="--category-color: ${category.color}">
+                        <div class="category-header">
+                            <div class="category-icon">${category.icon}</div>
+                            <div>
+                                <div class="category-title">${category.title}</div>
+                                <div class="category-subtitle">${incompleteGoals.length} tasks remaining</div>
                             </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Toggle goal in today's view
-        function toggleGoalInCategory(categoryKey, goalText) {
-            const categoryData = goalsData[categoryKey];
-            const allGoals = [...categoryData.miniGoals, ...categoryData.customGoals];
-            const goalIndex = allGoals.findIndex(goal => goal.text === goalText);
-            
-            if (goalIndex !== -1) {
-                toggleGoal(categoryKey, goalIndex);
-            }
-        }
-
-        // Show detailed stats
-        function showDetailedStats() {
-            const grid = document.getElementById('goalsGrid');
-            
-            // Calculate detailed statistics
-            const stats = calculateDetailedStats();
-            
-            grid.innerHTML = `
-                <div style="grid-column: 1 / -1;">
-                    <div style="background: rgba(255,255,255,0.95); padding: 30px; border-radius: 20px; margin-bottom: 20px;">
-                        <h2 style="color: #333; margin-bottom: 30px;">📊 Detailed Progress</h2>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                            ${Object.keys(GOAL_CATEGORIES).map(categoryKey => {
-                                const category = GOAL_CATEGORIES[categoryKey];
-                                const categoryStats = stats.categories[categoryKey];
+                        </div>
+                        
+                        <div class="mini-goals">
+                            <h4>🎯 Focus for Today</h4>
+                            ${incompleteGoals.slice(0, 3).map((goal, index) => {
+                                const originalIndex = [...categoryData.miniGoals, ...categoryData.customGoals].indexOf(goal);
+                                const isCustom = originalIndex >= categoryData.miniGoals.length;
+                                const actualIndex = isCustom ? originalIndex - categoryData.miniGoals.length : originalIndex;
+                                
                                 return `
-                                    <div style="background: ${category.color}15; padding: 20px; border-radius: 15px; border-left: 4px solid ${category.color};">
-                                        <h3 style="color: #333; margin-bottom: 15px;">${category.icon} ${category.title}</h3>
-                                        <div style="font-size: 2em; font-weight: 700; color: ${category.color}; margin-bottom: 5px;">${categoryStats.progress}%</div>
-                                        <div style="color: #666; font-size: 0.9em;">${categoryStats.completed}/${categoryStats.total} completed</div>
-                                        <div style="margin-top: 10px; font-size: 0.8em; color: #888;">
-                                            Last completed: ${categoryStats.lastCompleted || 'None yet'}
-                                        </div>
+                                    <div class="mini-goal-item">
+                                        <input type="checkbox" class="mini-goal-checkbox" 
+                                               onchange="toggleGoal('${categoryKey}', ${actualIndex}, ${isCustom})">
+                                        <span class="mini-goal-text">${goal.text}</span>
                                     </div>
                                 `;
                             }).join('')}
                         </div>
                     </div>
-                    
-                    <div style="background: rgba(255,255,255,0.95); padding: 30px; border-radius: 20px;">
-                        <h3 style="color: #333; margin-bottom: 20px;">🏆 Recent Achievements</h3>
-                        <div style="max-height: 300px; overflow-y: auto;">
-                            ${stats.recentCompletions.map(completion => `
-                                <div style="padding: 15px; background: #f8f9fa; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid ${GOAL_CATEGORIES[completion.category].color};">
-                                    <div style="font-weight: 500; color: #333;">${completion.text}</div>
-                                    <div style="font-size: 0.8em; color: #666; margin-top: 5px;">
-                                        ${GOAL_CATEGORIES[completion.category].icon} ${GOAL_CATEGORIES[completion.category].title} • ${new Date(completion.date).toLocaleDateString()}
-                                    </div>
-                                </div>
-                            `).join('') || '<div style="text-align: center; color: #666; padding: 20px;">No completed goals yet. Keep going! 💪</div>'}
-                        </div>
-                    </div>
-                </div>
-            `;
+                `;
+                
+                grid.innerHTML += categoryHTML;
+            });
         }
 
-        // Calculate detailed statistics
-        function calculateDetailedStats() {
-            const stats = {
-                categories: {},
-                recentCompletions: []
-            };
+        // Render detailed stats
+        function renderDetailedStats() {
+            const grid = document.getElementById('goalsGrid');
+            grid.innerHTML = '';
             
-            Object.keys(GOAL_CATEGORIES).forEach(categoryKey => {
+            // Category progress breakdown
+            const statsHTML = Object.keys(GOAL_CATEGORIES).map(categoryKey => {
+                const category = GOAL_CATEGORIES[categoryKey];
                 const categoryData = goalsData[categoryKey];
                 const allGoals = [...categoryData.miniGoals, ...categoryData.customGoals];
-                const completed = allGoals.filter(goal => goal.completed);
+                const completed = allGoals.filter(goal => goal.completed).length;
+                const total = allGoals.length;
+                const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
                 
-                stats.categories[categoryKey] = {
-                    total: allGoals.length,
-                    completed: completed.length,
-                    progress: allGoals.length > 0 ? Math.round((completed.length / allGoals.length) * 100) : 0,
-                    lastCompleted: completed.length > 0 ? 
-                        new Date(Math.max(...completed.map(g => new Date(g.completedDate)))).toLocaleDateString() : null
-                };
-                
-                // Add to recent completions
-                completed.forEach(goal => {
-                    if (goal.completedDate) {
-                        stats.recentCompletions.push({
-                            category: categoryKey,
-                            text: goal.text,
-                            date: goal.completedDate
-                        });
-                    }
-                });
-            });
+                return `
+                    <div class="goal-category category-${categoryKey}" style="--category-color: ${category.color}">
+                        <div class="category-header">
+                            <div class="category-icon">${category.icon}</div>
+                            <div>
+                                <div class="category-title">${category.title}</div>
+                                <div class="category-subtitle">Detailed Progress</div>
+                            </div>
+                        </div>
+                        
+                        <div style="text-align: center; padding: 20px;">
+                            <div style="font-size: 3em; font-weight: 700; color: ${category.color}; margin-bottom: 10px;">${progress}%</div>
+                            <div style="font-size: 1.1em; color: #666; margin-bottom: 15px;">${completed} of ${total} completed</div>
+                            
+                            <div class="progress-container">
+                                <div class="progress-bar" style="width: ${progress}%"></div>
+                            </div>
+                            
+                            <div style="margin-top: 20px; text-align: left;">
+                                <div style="font-weight: 600; margin-bottom: 10px;">Recent Completions:</div>
+                                ${allGoals.filter(goal => goal.completed && goal.completedDate)
+                                    .sort((a, b) => new Date(b.completedDate) - new Date(a.completedDate))
+                                    .slice(0, 3)
+                                    .map(goal => `
+                                        <div style="font-size: 0.9em; color: #666; margin-bottom: 5px;">
+                                            ✅ ${goal.text} 
+                                            <span style="color: #999;">(${new Date(goal.completedDate).toLocaleDateString()})</span>
+                                        </div>
+                                    `).join('') || '<div style="font-size: 0.9em; color: #999;">No completions yet</div>'}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
             
-            // Sort recent completions by date
-            stats.recentCompletions.sort((a, b) => new Date(b.date) - new Date(a.date));
-            stats.recentCompletions = stats.recentCompletions.slice(0, 10); // Last 10
-            
-            return stats;
-        }
-
-        // Update main stats dashboard
-        function updateStats() {
-            const stats = calculateDetailedStats();
-            
-            // Calculate overall progress
-            let totalGoals = 0;
-            let totalCompleted = 0;
-            Object.values(stats.categories).forEach(cat => {
-                totalGoals += cat.total;
-                totalCompleted += cat.completed;
-            });
-            
-            const overallProgress = totalGoals > 0 ? Math.round((totalCompleted / totalGoals) * 100) : 0;
-            
-            // Count today's completions
-            const today = new Date().toDateString();
-            const todayCompletions = stats.recentCompletions.filter(comp => 
-                new Date(comp.date).toDateString() === today
-            ).length;
-            
-            // Calculate streak (simplified)
-            const streak = calculateStreak();
-            
-            document.getElementById('totalProgress').textContent = overallProgress + '%';
-            document.getElementById('completedToday').textContent = todayCompletions;
-            document.getElementById('activeGoals').textContent = totalGoals - totalCompleted;
-            document.getElementById('weekStreak').textContent = streak;
-        }
-
-        // Calculate streak
-        function calculateStreak() {
-            const stats = calculateDetailedStats();
-            const completions = stats.recentCompletions;
-            
-            if (completions.length === 0) return 0;
-            
-            // Simple streak: count unique days with completions in last 7 days
-            const last7Days = new Date();
-            last7Days.setDate(last7Days.getDate() - 7);
-            
-            const recentDays = new Set(
-                completions
-                    .filter(comp => new Date(comp.date) >= last7Days)
-                    .map(comp => new Date(comp.date).toDateString())
-            );
-            
-            return recentDays.size;
+            grid.innerHTML = statsHTML;
         }
 
         // Journal functionality
@@ -1212,104 +1210,94 @@
                 day: 'numeric'
             });
             document.getElementById('journalDate').textContent = today;
-            
-            // Load today's journal entry
-            const todayKey = new Date().toDateString();
+        }
+
+        function loadJournal() {
+            const today = new Date().toDateString();
             const journal = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {};
-            const todayEntry = journal[todayKey] || '';
+            const todayEntry = journal[today] || '';
+            
             document.getElementById('journalText').value = todayEntry;
         }
 
         function saveJournal() {
-            const todayKey = new Date().toDateString();
+            const today = new Date().toDateString();
             const text = document.getElementById('journalText').value;
             const journal = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {};
             
             if (text.trim()) {
-                journal[todayKey] = text;
+                journal[today] = text;
             } else {
-                delete journal[todayKey];
+                delete journal[today];
             }
             
             localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journal));
+            updateStats();
             
             // Show save confirmation
             const btn = event.target;
             const originalText = btn.textContent;
             btn.textContent = '✅ Saved!';
-            btn.style.background = 'linear-gradient(135deg, #43e97b, #38f9d7)';
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
-            }, 2000);
+            setTimeout(() => btn.textContent = originalText, 2000);
         }
 
-        // Sync functionality (placeholder for future GitHub integration)
-        function syncData() {
-            const btn = document.getElementById('syncBtn');
-            const status = document.getElementById('syncStatus');
+        // Data export functionality
+        function exportData() {
+            const allData = {
+                goals: goalsData,
+                journal: JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {},
+                currentWeight: localStorage.getItem('currentWeight') || '100',
+                exportDate: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
             
-            btn.disabled = true;
-            btn.textContent = 'Syncing...';
-            status.textContent = 'Syncing...';
-            status.className = 'sync-status local';
-            
-            // Simulate sync (replace with actual GitHub API calls)
-            setTimeout(() => {
-                btn.disabled = false;
-                btn.textContent = 'Sync';
-                status.textContent = 'Synced';
-                status.className = 'sync-status synced';
-                
-                setTimeout(() => {
-                    status.textContent = 'Local Only';
-                    status.className = 'sync-status local';
-                }, 3000);
-            }, 2000);
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `life-goals-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
         }
+
+        // Sync functionality placeholder
+        function syncData() {
+            // This could be expanded to sync with GitHub, Google Drive, etc.
+            console.log('Sync functionality - to be implemented');
+            
+            const syncBtn = document.getElementById('syncBtn');
+            const originalText = syncBtn.textContent;
+            syncBtn.textContent = 'Synced!';
+            setTimeout(() => syncBtn.textContent = originalText, 2000);
+        }
+
+        // Auto-save functionality
+        setInterval(() => {
+            saveGoalsData();
+        }, 30000); // Auto-save every 30 seconds
 
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey || e.metaKey) {
                 switch(e.key) {
-                    case '1':
+                    case 's':
                         e.preventDefault();
-                        showView('all');
+                        saveJournal();
                         break;
-                    case '2':
+                    case 'e':
                         e.preventDefault();
-                        showView('today');
-                        break;
-                    case '3':
-                        e.preventDefault();
-                        showView('stats');
-                        break;
-                    case '4':
-                        e.preventDefault();
-                        showView('journal');
+                        exportData();
                         break;
                 }
             }
         });
 
-        // Auto-save journal
+        // Initialize animations
         document.addEventListener('DOMContentLoaded', function() {
-            const journalText = document.getElementById('journalText');
-            if (journalText) {
-                let saveTimeout;
-                journalText.addEventListener('input', function() {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(saveJournal, 2000); // Auto-save after 2 seconds of no typing
-                });
-            }
-        });
-
-        // Initialize on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Add some initial animations
+            // Add loading state
+            document.body.classList.add('loading');
             setTimeout(() => {
-                document.body.style.opacity = '1';
-            }, 100);
+                document.body.classList.remove('loading');
+            }, 500);
         });
     </script>
 
