@@ -1,0 +1,1214 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Life Tracker | Yasaman Safarkhanlo</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="description" content="Private life tracking page">
+    <meta name="robots" content="noindex, nofollow">
+    <link href="//fonts.googleapis.com/css?family=Roboto:400,100,300,700,500,900" rel="stylesheet" type="text/css">
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <style>
+        /* Base styles matching your site */
+        * {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            font-weight: 300;
+            line-height: 1.6;
+            color: #444;
+            background: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        #header {
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        #logo h1 {
+            font-size: 2em;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+
+        #logo .tag {
+            color: #888;
+            font-size: 0.9em;
+            font-weight: 400;
+        }
+
+        .sync-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sync-status {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .sync-status.local {
+            background: #ffc107;
+            color: #856404;
+        }
+
+        .sync-status.synced {
+            background: #28a745;
+            color: white;
+        }
+
+        .sync-status.error {
+            background: #dc3545;
+            color: white;
+        }
+
+        .sync-btn {
+            background: #007acc;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .sync-btn:hover {
+            background: #005a99;
+        }
+
+        .sync-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Main content */
+        #main {
+            margin-top: 120px;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* Login form */
+        .login-container {
+            max-width: 500px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .login-form h2 {
+            margin-bottom: 30px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 400;
+        }
+
+        input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="password"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        .btn {
+            background: #007acc;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            transition: background 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #005a99;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .success {
+            color: #28a745;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .sync-setup {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .sync-setup h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .sync-setup p {
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .sync-setup a {
+            color: #007acc;
+            text-decoration: none;
+        }
+
+        .sync-setup a:hover {
+            text-decoration: underline;
+        }
+
+        /* Tracker interface - hidden by default */
+        .tracker-interface {
+            display: none;
+            padding: 40px 0;
+        }
+
+        .tracker-nav {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .nav-btn {
+            background: none;
+            border: none;
+            padding: 15px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .nav-btn.active {
+            color: #007acc;
+            border-bottom-color: #007acc;
+        }
+
+        .tracker-section {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .tracker-section.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* Goals tracking */
+        .goal-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
+        }
+
+        .goal-checkbox {
+            margin-right: 15px;
+            transform: scale(1.2);
+        }
+
+        .goal-text {
+            flex: 1;
+            font-size: 16px;
+        }
+
+        .goal-text.completed {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .goal-date {
+            color: #666;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+
+        .add-goal {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .add-goal input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .add-goal button {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        /* Habit tracker */
+        .habit-grid {
+            display: grid;
+            grid-template-columns: 1fr repeat(7, 40px);
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .habit-name {
+            font-weight: 500;
+            padding: 8px;
+        }
+
+        .habit-day {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .habit-day.completed {
+            background: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+
+        .habit-day.partial {
+            background: #ffc107;
+            border-color: #ffc107;
+            color: white;
+        }
+
+        .week-header {
+            display: grid;
+            grid-template-columns: 1fr repeat(7, 40px);
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        /* Journal */
+        .journal-entry {
+            margin-bottom: 20px;
+        }
+
+        .journal-entry textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            resize: vertical;
+        }
+
+        .journal-entry .date {
+            font-weight: 500;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .journal-save {
+            background: #007acc;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Statistics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #007acc, #0066cc);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        /* Export/Import */
+        .data-controls {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .data-controls h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .data-controls button {
+            margin-right: 10px;
+            margin-bottom: 10px;
+            padding: 8px 16px;
+            border: 1px solid #007acc;
+            background: white;
+            color: #007acc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .data-controls button:hover {
+            background: #007acc;
+            color: white;
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 768px) {
+            .tracker-nav {
+                flex-wrap: wrap;
+            }
+            
+            .habit-grid {
+                grid-template-columns: 1fr repeat(7, 30px);
+            }
+            
+            .habit-day {
+                width: 30px;
+                height: 30px;
+            }
+            
+            .week-header {
+                grid-template-columns: 1fr repeat(7, 30px);
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .sync-controls {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div id="header">
+        <div class="container">
+            <div class="header-content">
+                <div id="logo">
+                    <h1>Life Tracker</h1>
+                    <span class="tag">Personal Dashboard</span>
+                </div>
+                <div class="sync-controls" id="syncControls" style="display: none;">
+                    <span class="sync-status local" id="syncStatus">Local Only</span>
+                    <button class="sync-btn" id="syncBtn" onclick="syncData()">Sync Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-form">
+            <h2>Private Access</h2>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+            <button class="btn" onclick="login()">Access Tracker</button>
+            <div class="error" id="errorMsg"></div>
+            
+            <div class="sync-setup">
+                <h3>🔄 Optional: Enable Data Sync</h3>
+                <p>To sync your data across devices, you can connect to GitHub:</p>
+                <div class="form-group">
+                    <label for="githubToken">GitHub Personal Access Token (optional):</label>
+                    <input type="text" id="githubToken" placeholder="ghp_...">
+                </div>
+                <div class="form-group">
+                    <label for="githubRepo">Repository (format: username/repo-name):</label>
+                    <input type="text" id="githubRepo" placeholder="yaskhanloo/life-tracker-data">
+                </div>
+                <p><small>
+                    <strong>Setup:</strong> 
+                    1. Create a private repo on GitHub<br>
+                    2. Generate a Personal Access Token with 'repo' permissions<br>
+                    3. Enter details above<br>
+                    <a href="https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token" target="_blank">How to create a token</a>
+                </small></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Tracker Interface -->
+    <div id="main">
+        <div class="container">
+            <div class="tracker-interface" id="trackerInterface">
+                
+                <!-- Navigation -->
+                <div class="tracker-nav">
+                    <button class="nav-btn active" onclick="showSection('goals')">Goals</button>
+                    <button class="nav-btn" onclick="showSection('habits')">Habits</button>
+                    <button class="nav-btn" onclick="showSection('journal')">Journal</button>
+                    <button class="nav-btn" onclick="showSection('stats')">Statistics</button>
+                    <button class="nav-btn" onclick="showSection('settings')">Settings</button>
+                </div>
+
+                <!-- Goals Section -->
+                <div class="tracker-section active" id="goalsSection">
+                    <h2 class="section-title">My Goals</h2>
+                    <div id="goalsList">
+                        <!-- Goals will be loaded here -->
+                    </div>
+                    <div class="add-goal">
+                        <input type="text" id="newGoal" placeholder="Add a new goal...">
+                        <button onclick="addGoal()">Add Goal</button>
+                    </div>
+                </div>
+
+                <!-- Habits Section -->
+                <div class="tracker-section" id="habitsSection">
+                    <h2 class="section-title">Daily Habits</h2>
+                    <div class="week-header">
+                        <div></div>
+                        <div>Mon</div>
+                        <div>Tue</div>
+                        <div>Wed</div>
+                        <div>Thu</div>
+                        <div>Fri</div>
+                        <div>Sat</div>
+                        <div>Sun</div>
+                    </div>
+                    <div id="habitsGrid">
+                        <!-- Habits will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Journal Section -->
+                <div class="tracker-section" id="journalSection">
+                    <h2 class="section-title">Daily Reflection</h2>
+                    <div class="journal-entry">
+                        <div class="date" id="journalDate"></div>
+                        <textarea id="journalText" placeholder="How was your day? What did you learn? What are you grateful for?"></textarea>
+                        <button class="journal-save" onclick="saveJournal()">Save Entry</button>
+                    </div>
+                </div>
+
+                <!-- Statistics Section -->
+                <div class="tracker-section" id="statsSection">
+                    <h2 class="section-title">Your Progress</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="goalsCompleted">0</div>
+                            <div class="stat-label">Goals Completed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="habitStreak">0</div>
+                            <div class="stat-label">Current Streak</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="journalEntries">0</div>
+                            <div class="stat-label">Journal Entries</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="weekProgress">0%</div>
+                            <div class="stat-label">This Week</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="tracker-section" id="settingsSection">
+                    <h2 class="section-title">Settings & Data Management</h2>
+                    
+                    <div class="data-controls">
+                        <h3>🔄 Sync Settings</h3>
+                        <p>Status: <span id="syncStatusText">Local storage only</span></p>
+                        <button onclick="configurSync()">Configure GitHub Sync</button>
+                        <button onclick="testConnection()">Test Connection</button>
+                        <button onclick="syncData()">Manual Sync</button>
+                    </div>
+
+                    <div class="data-controls">
+                        <h3>📁 Data Management</h3>
+                        <button onclick="exportData()">Export All Data</button>
+                        <button onclick="importData()">Import Data</button>
+                        <button onclick="clearAllData()" style="background: #dc3545; color: white; border-color: #dc3545;">Clear All Data</button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+                    </div>
+
+                    <div class="data-controls">
+                        <h3>🔧 Customize Habits</h3>
+                        <div id="habitsList"></div>
+                        <div style="margin-top: 15px;">
+                            <input type="text" id="newHabit" placeholder="Add new habit..." style="margin-right: 10px; padding: 8px;">
+                            <button onclick="addHabit()">Add Habit</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CORRECT_PASSWORD = "YourSecurePassword123"; // Change this to your desired password
+        
+        // Data storage keys
+        const STORAGE_KEYS = {
+            goals: 'lifeTracker_goals',
+            habits: 'lifeTracker_habits',
+            journal: 'lifeTracker_journal',
+            habitData: 'lifeTracker_habitData',
+            githubToken: 'lifeTracker_githubToken',
+            githubRepo: 'lifeTracker_githubRepo',
+            lastSync: 'lifeTracker_lastSync'
+        };
+
+        // Default habits
+        const DEFAULT_HABITS = [
+            'Exercise',
+            'Read',
+            'Meditate',
+            'Drink 8 glasses of water',
+            'Get 8 hours sleep'
+        ];
+
+        let syncConfig = {
+            token: '',
+            repo: '',
+            enabled: false
+        };
+
+        // Initialize sync configuration
+        function initSyncConfig() {
+            syncConfig.token = localStorage.getItem(STORAGE_KEYS.githubToken) || '';
+            syncConfig.repo = localStorage.getItem(STORAGE_KEYS.githubRepo) || '';
+            syncConfig.enabled = !!(syncConfig.token && syncConfig.repo);
+            
+            if (syncConfig.enabled) {
+                document.getElementById('syncControls').style.display = 'flex';
+                updateSyncStatus('synced', 'Connected to GitHub');
+            }
+        }
+
+        // Login functionality
+        function login() {
+            const password = document.getElementById('password').value;
+            const githubToken = document.getElementById('githubToken').value.trim();
+            const githubRepo = document.getElementById('githubRepo').value.trim();
+            const errorMsg = document.getElementById('errorMsg');
+            
+            if (password === CORRECT_PASSWORD) {
+                // Save GitHub config if provided
+                if (githubToken && githubRepo) {
+                    localStorage.setItem(STORAGE_KEYS.githubToken, githubToken);
+                    localStorage.setItem(STORAGE_KEYS.githubRepo, githubRepo);
+                    syncConfig.token = githubToken;
+                    syncConfig.repo = githubRepo;
+                    syncConfig.enabled = true;
+                }
+                
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('trackerInterface').style.display = 'block';
+                initializeTracker();
+            } else {
+                errorMsg.textContent = 'Incorrect password. Please try again.';
+                setTimeout(() => errorMsg.textContent = '', 3000);
+            }
+        }
+
+        // Allow Enter key to login
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
+        // GitHub API functions
+        async function syncData() {
+            if (!syncConfig.enabled) {
+                alert('GitHub sync not configured. Please set up in Settings.');
+                return;
+            }
+
+            updateSyncStatus('syncing', 'Syncing...');
+            document.getElementById('syncBtn').disabled = true;
+
+            try {
+                // Collect all data
+                const allData = {
+                    goals: JSON.parse(localStorage.getItem(STORAGE_KEYS.goals)) || [],
+                    habits: JSON.parse(localStorage.getItem(STORAGE_KEYS.habits)) || DEFAULT_HABITS,
+                    journal: JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {},
+                    habitData: JSON.parse(localStorage.getItem(STORAGE_KEYS.habitData)) || {},
+                    lastUpdated: new Date().toISOString()
+                };
+
+                // First, try to get existing file to get SHA
+                let sha = null;
+                try {
+                    const getResponse = await fetch(`https://api.github.com/repos/${syncConfig.repo}/contents/life-tracker-data.json`, {
+                        headers: {
+                            'Authorization': `token ${syncConfig.token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    });
+                    
+                    if (getResponse.ok) {
+                        const existingFile = await getResponse.json();
+                        sha = existingFile.sha;
+                        
+                        // Merge with existing data if newer
+                        const existingData = JSON.parse(atob(existingFile.content));
+                        if (existingData.lastUpdated && new Date(existingData.lastUpdated) > new Date(localStorage.getItem(STORAGE_KEYS.lastSync) || '1970-01-01')) {
+                            // Remote data is newer, merge it
+                            mergeRemoteData(existingData);
+                        }
+                    }
+                } catch (e) {
+                    console.log('No existing file found, will create new one');
+                }
+
+                // Upload data
+                const uploadResponse = await fetch(`https://api.github.com/repos/${syncConfig.repo}/contents/life-tracker-data.json`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${syncConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update life tracker data - ${new Date().toLocaleString()}`,
+                        content: btoa(JSON.stringify(allData, null, 2)),
+                        ...(sha && { sha })
+                    })
+                });
+
+                if (uploadResponse.ok) {
+                    localStorage.setItem(STORAGE_KEYS.lastSync, new Date().toISOString());
+                    updateSyncStatus('synced', 'Synced successfully');
+                    setTimeout(() => updateSyncStatus('synced', 'Connected to GitHub'), 3000);
+                } else {
+                    throw new Error('Upload failed');
+                }
+
+            } catch (error) {
+                console.error('Sync error:', error);
+                updateSyncStatus('error', 'Sync failed');
+                setTimeout(() => updateSyncStatus('local', 'Local Only'), 3000);
+            }
+
+            document.getElementById('syncBtn').disabled = false;
+        }
+
+        function mergeRemoteData(remoteData) {
+            // Simple merge strategy - you can make this more sophisticated
+            localStorage.setItem(STORAGE_KEYS.goals, JSON.stringify(remoteData.goals || []));
+            localStorage.setItem(STORAGE_KEYS.habits, JSON.stringify(remoteData.habits || DEFAULT_HABITS));
+            localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(remoteData.journal || {}));
+            localStorage.setItem(STORAGE_KEYS.habitData, JSON.stringify(remoteData.habitData || {}));
+            
+            // Reload the interface
+            loadGoals();
+            loadHabits();
+            loadJournal();
+            updateStats();
+        }
+
+        function updateSyncStatus(type, message) {
+            const statusEl = document.getElementById('syncStatus');
+            const statusTextEl = document.getElementById('syncStatusText');
+            
+            statusEl.className = `sync-status ${type}`;
+            statusEl.textContent = message;
+            
+            if (statusTextEl) {
+                statusTextEl.textContent = message;
+            }
+        }
+
+        async function testConnection() {
+            if (!syncConfig.enabled) {
+                alert('Please configure GitHub sync first.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`https://api.github.com/repos/${syncConfig.repo}`, {
+                    headers: {
+                        'Authorization': `token ${syncConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+
+                if (response.ok) {
+                    alert('✅ Connection successful!');
+                } else {
+                    alert('❌ Connection failed. Check your token and repository.');
+                }
+            } catch (error) {
+                alert('❌ Connection error: ' + error.message);
+            }
+        }
+
+        // Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.tracker-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active from all nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + 'Section').classList.add('active');
+            event.target.classList.add('active');
+
+            // Load settings when settings section is shown
+            if (sectionName === 'settings') {
+                loadSettings();
+            }
+        }
+
+        // Initialize tracker
+        function initializeTracker() {
+            initSyncConfig();
+            loadGoals();
+            loadHabits();
+            loadJournal();
+            updateStats();
+            
+            // Set today's date for journal
+            const today = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            document.getElementById('journalDate').textContent = today;
+
+            // Auto-sync every 5 minutes if enabled
+            if (syncConfig.enabled) {
+                setInterval(() => {
+                    syncData();
+                }, 5 * 60 * 1000);
+            }
+        }
+
+        // Settings functions
+        function loadSettings() {
+            const habitsList = document.getElementById('habitsList');
+            const habits = JSON.parse(localStorage.getItem(STORAGE_KEYS.habits)) || DEFAULT_HABITS;
+            
+            habitsList.innerHTML = '';
+            habits.forEach((habit, index) => {
+                const habitDiv = document.createElement('div');
+                habitDiv.style.display = 'flex';
+                habitDiv.style.alignItems = 'center';
+                habitDiv.style.marginBottom = '10px';
+                habitDiv.innerHTML = `
+                    <span style="flex: 1; padding: 8px;">${habit}</span>
+                    <button onclick="removeHabit(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer;">Remove</button>
+                `;
+                habitsList.appendChild(habitDiv);
+            });
+
+            // Update sync status
+            document.getElementById('syncStatusText').textContent = syncConfig.enabled ? 'Connected to GitHub' : 'Local storage only';
+        }
+
+        function addHabit() {
+            const newHabitInput = document.getElementById('newHabit');
+            const habitText = newHabitInput.value.trim();
+            
+            if (!habitText) return;
+            
+            const habits = JSON.parse(localStorage.getItem(STORAGE_KEYS.habits)) || DEFAULT_HABITS;
+            habits.push(habitText);
+            
+            localStorage.setItem(STORAGE_KEYS.habits, JSON.stringify(habits));
+            newHabitInput.value = '';
+            loadSettings();
+            loadHabits();
+        }
+
+        function removeHabit(index) {
+            if (!confirm('Remove this habit?')) return;
+            
+            const habits = JSON.parse(localStorage.getItem(STORAGE_KEYS.habits)) || DEFAULT_HABITS;
+            habits.splice(index, 1);
+            localStorage.setItem(STORAGE_KEYS.habits, JSON.stringify(habits));
+            loadSettings();
+            loadHabits();
+        }
+
+        function configurSync() {
+            const token = prompt('Enter GitHub Personal Access Token:');
+            const repo = prompt('Enter repository (format: username/repo-name):');
+            
+            if (token && repo) {
+                localStorage.setItem(STORAGE_KEYS.githubToken, token);
+                localStorage.setItem(STORAGE_KEYS.githubRepo, repo);
+                syncConfig.token = token;
+                syncConfig.repo = repo;
+                syncConfig.enabled = true;
+                
+                document.getElementById('syncControls').style.display = 'flex';
+                updateSyncStatus('synced', 'Connected to GitHub');
+                loadSettings();
+            }
+        }
+
+        // Data export/import functions
+        function exportData() {
+            const allData = {
+                goals: JSON.parse(localStorage.getItem(STORAGE_KEYS.goals)) || [],
+                habits: JSON.parse(localStorage.getItem(STORAGE_KEYS.habits)) || DEFAULT_HABITS,
+                journal: JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {},
+                habitData: JSON.parse(localStorage.getItem(STORAGE_KEYS.habitData)) || {},
+                exportDate: new Date().toISOString()
+            };
+
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `life-tracker-backup-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        }
+
+        function importData() {
+            document.getElementById('importFile').click();
+        }
+
+        function handleImportFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (confirm('This will replace all current data. Continue?')) {
+                        if (data.goals) localStorage.setItem(STORAGE_KEYS.goals, JSON.stringify(data.goals));
+                        if (data.habits) localStorage.setItem(STORAGE_KEYS.habits, JSON.stringify(data.habits));
+                        if (data.journal) localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(data.journal));
+                        if (data.habitData) localStorage.setItem(STORAGE_KEYS.habitData, JSON.stringify(data.habitData));
+                        
+                        // Reload everything
+                        loadGoals();
+                        loadHabits();
+                        loadJournal();
+                        updateStats();
+                        loadSettings();
+                        
+                        alert('Data imported successfully!');
+                    }
+                } catch (error) {
+                    alert('Error importing data: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function clearAllData() {
+            if (!confirm('This will delete ALL your data permanently. Are you sure?')) return;
+            if (!confirm('Last chance - this cannot be undone!')) return;
+            
+            Object.values(STORAGE_KEYS).forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            location.reload();
+        }
+
+        // Goals functionality
+        function loadGoals() {
+            const goals = JSON.parse(localStorage.getItem(STORAGE_KEYS.goals)) || [];
+            const goalsList = document.getElementById('goalsList');
+            
+            goalsList.innerHTML = '';
+            goals.forEach((goal, index) => {
+                const goalItem = document.createElement('div');
+                goalItem.className = 'goal-item';
+                goalItem.innerHTML = `
+                    <input type="checkbox" class="goal-checkbox" ${goal.completed ? 'checked' : ''} 
+                           onchange="toggleGoal(${index})">
+                    <span class="goal-text ${goal.completed ? 'completed' : ''}">${goal.text}</span>
+                    <span class="goal-date">${goal.date}</span>
+                `;
+                goalsList.appendChild(goalItem);
+            });
+        }
+
+        function addGoal() {
+            const goalText = document.getElementById('newGoal').value.trim();
+            if (!goalText) return;
+            
+            const goals = JSON.parse(localStorage.getItem(STORAGE_KEYS.goals)) || [];
+            goals.push({
+                text: goalText,
+                completed: false,
+                date: new Date().toLocaleDateString()
+            });
+            
+            localStorage.setItem(STORAGE_KEYS.goals, JSON.stringify(goals));
+            document.getElementById('newGoal').value = '';
+            loadGoals();
+            updateStats();
+            
+            // Auto-sync if enabled
+            if (syncConfig.enabled) {
+                setTimeout(syncData, 1000);
+            }
+        }
+
+        function toggleGoal(index) {
+            const goals = JSON.parse(localStorage.getItem(STORAGE_KEYS.goals)) || [];
+            goals[index].completed = !goals[index].completed;
+            localStorage.setItem(STORAGE_KEYS.goals, JSON.stringify(goals));
+            loadGoals();
+            updateStats();
+            
+            // Auto-sync if enabled
+            if (syncConfig.enabled) {
+                setTimeout(syncData, 1000);
+            }
+        }
+
+        // Habits functionality
+        function loadHabits() {
+            const habits = JSON.parse(localStorage.getItem(STORAGE_KEYS.habits)) || DEFAULT_HABITS;
+            const habitsGrid = document.getElementById('habitsGrid');
+            
+            habitsGrid.innerHTML = '';
+            
+            habits.forEach((habit, habitIndex) => {
+                const habitRow = document.createElement('div');
+                habitRow.className = 'habit-grid';
+                
+                let rowHTML = `<div class="habit-name">${habit}</div>`;
+                
+                // Add 7 days for this week
+                for (let day = 0; day < 7; day++) {
+                    const dayKey = `${habitIndex}-${day}`;
+                    const status = getHabitStatus(dayKey);
+                    rowHTML += `<div class="habit-day ${status}" onclick="toggleHabit('${dayKey}')">
+                        ${status === 'completed' ? '✓' : status === 'partial' ? '½' : ''}
+                    </div>`;
+                }
+                
+                habitRow.innerHTML = rowHTML;
+                habitsGrid.appendChild(habitRow);
+            });
+        }
+
+        function getHabitStatus(dayKey) {
+            const habitData = JSON.parse(localStorage.getItem(STORAGE_KEYS.habitData)) || {};
+            return habitData[dayKey] || '';
+        }
+
+        function toggleHabit(dayKey) {
+            const habitData = JSON.parse(localStorage.getItem(STORAGE_KEYS.habitData)) || {};
+            const currentStatus = habitData[dayKey] || '';
+            
+            // Cycle through: empty -> partial -> completed -> empty
+            let newStatus = '';
+            if (currentStatus === '') newStatus = 'partial';
+            else if (currentStatus === 'partial') newStatus = 'completed';
+            else newStatus = '';
+            
+            if (newStatus === '') {
+                delete habitData[dayKey];
+            } else {
+                habitData[dayKey] = newStatus;
+            }
+            
+            localStorage.setItem(STORAGE_KEYS.habitData, JSON.stringify(habitData));
+            loadHabits();
+            updateStats();
+            
+            // Auto-sync if enabled
+            if (syncConfig.enabled) {
+                setTimeout(syncData, 1000);
+            }
+        }
+
+        // Journal functionality
+        function loadJournal() {
+            const today = new Date().toDateString();
+            const journal = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {};
+            const todayEntry = journal[today] || '';
+            
+            document.getElementById('journalText').value = todayEntry;
+        }
+
+        function saveJournal() {
+            const today = new Date().toDateString();
+            const text = document.getElementById('journalText').value;
+            const journal = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {};
+            
+            if (text.trim()) {
+                journal[today] = text;
+            } else {
+                delete journal[today];
+            }
+            
+            localStorage.setItem(STORAGE_KEYS.journal, JSON.stringify(journal));
+            updateStats();
+            
+            // Show save confirmation
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = 'Saved!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+            
+            // Auto-sync if enabled
+            if (syncConfig.enabled) {
+                setTimeout(syncData, 1000);
+            }
+        }
+
+        // Statistics
+        function updateStats() {
+            // Goals completed
+            const goals = JSON.parse(localStorage.getItem(STORAGE_KEYS.goals)) || [];
+            const completedGoals = goals.filter(goal => goal.completed).length;
+            document.getElementById('goalsCompleted').textContent = completedGoals;
+            
+            // Current streak (simplified - consecutive days with any habit completed)
+            document.getElementById('habitStreak').textContent = calculateStreak();
+            
+            // Journal entries
+            const journal = JSON.parse(localStorage.getItem(STORAGE_KEYS.journal)) || {};
+            document.getElementById('journalEntries').textContent = Object.keys(journal).length;
+            
+            // This week progress
+            const weekProgress = calculateWeekProgress();
+            document.getElementById('weekProgress').textContent = weekProgress + '%';
+        }
+
+        function calculateStreak() {
+            const habitData = JSON.parse(localStorage.getItem(STORAGE_KEYS.habitData)) || {};
+            // Simplified streak calculation
+            return Object.keys(habitData).length > 0 ? Math.min(7, Object.keys(habitData).length) : 0;
+        }
+
+        function calculateWeekProgress() {
+            const habitData = JSON.parse(localStorage.getItem(STORAGE_KEYS.habitData)) || {};
+            const habits = JSON.parse(localStorage.getItem(STORAGE_KEYS.habits)) || DEFAULT_HABITS;
+            
+            const totalPossible = habits.length * 7; // 7 days
+            let completed = 0;
+            
+            Object.values(habitData).forEach(status => {
+                if (status === 'completed') completed += 1;
+                else if (status === 'partial') completed += 0.5;
+            });
+            
+            return totalPossible > 0 ? Math.round((completed / totalPossible) * 100) : 0;
+        }
+    </script>
+
+</body>
+</html>
