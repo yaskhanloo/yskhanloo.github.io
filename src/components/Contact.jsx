@@ -1,4 +1,8 @@
 const Contact = () => {
+  const handleContactClick = (url) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="contact">
       <div className="contact-container">
@@ -9,29 +13,29 @@ const Contact = () => {
         </p>
 
         <div className="contact-methods">
-          <a href="mailto:yaskhanloo@gmail.com" className="contact-method">
+          <div className="contact-method" onClick={() => window.location.href = 'mailto:yaskhanloo@gmail.com'}>
             <div className="contact-icon">📧</div>
             <div className="contact-label">Email</div>
             <div className="contact-value">yaskhanloo@gmail.com</div>
-          </a>
+          </div>
 
-          <a href="https://linkedin.com/in/yaskhanloo" target="_blank" rel="noopener noreferrer" className="contact-method">
+          <div className="contact-method" onClick={() => handleContactClick('https://linkedin.com/in/yaskhanloo')}>
             <div className="contact-icon">💼</div>
             <div className="contact-label">LinkedIn</div>
             <div className="contact-value">yaskhanloo</div>
-          </a>
+          </div>
 
-          <a href="https://github.com/yaskhanloo" target="_blank" rel="noopener noreferrer" className="contact-method">
+          <div className="contact-method" onClick={() => handleContactClick('https://github.com/yaskhanloo')}>
             <div className="contact-icon">💻</div>
             <div className="contact-label">GitHub</div>
             <div className="contact-value">yaskhanloo</div>
-          </a>
+          </div>
 
-          <a href="https://scholar.google.com/citations?user=yaskhanloo" target="_blank" rel="noopener noreferrer" className="contact-method">
+          <div className="contact-method" onClick={() => handleContactClick('https://scholar.google.com/citations?user=yaskhanloo')}>
             <div className="contact-icon">🎓</div>
             <div className="contact-label">Scholar</div>
             <div className="contact-value">Google Scholar</div>
-          </a>
+          </div>
         </div>
 
         <div className="contact-note">
