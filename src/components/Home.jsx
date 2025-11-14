@@ -10,10 +10,10 @@ const Home = () => {
         </p>
         <div className="hero-buttons">
           <a href="/projects" className="btn btn-primary">
-            View Projects
+            See My Work
           </a>
           <a href="/contact" className="btn btn-secondary">
-            Let's Connect
+            Get in Touch
           </a>
         </div>
       </section>
