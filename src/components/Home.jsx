@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const Home = () => {
   return (
     <div className="home">
@@ -9,12 +11,12 @@ const Home = () => {
           systems that support better patient outcomes.
         </p>
         <div className="hero-buttons">
-          <a href="/projects" className="btn btn-primary">
+          <Link to="/projects" className="btn btn-primary">
             See My Work
-          </a>
-          <a href="/contact" className="btn btn-secondary">
+          </Link>
+          <Link to="/contact" className="btn btn-secondary">
             Get in Touch
-          </a>
+          </Link>
         </div>
       </section>
 
