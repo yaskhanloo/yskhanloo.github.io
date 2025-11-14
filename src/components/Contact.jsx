@@ -9,29 +9,29 @@ const Contact = () => {
         </p>
 
         <div className="contact-methods">
-          <div className="contact-method">
+          <a href="mailto:yaskhanloo@gmail.com" className="contact-method">
             <div className="contact-icon">📧</div>
             <div className="contact-label">Email</div>
             <div className="contact-value">yaskhanloo@gmail.com</div>
-          </div>
+          </a>
 
-          <div className="contact-method">
+          <a href="https://linkedin.com/in/yaskhanloo" target="_blank" rel="noopener noreferrer" className="contact-method">
             <div className="contact-icon">💼</div>
             <div className="contact-label">LinkedIn</div>
             <div className="contact-value">yaskhanloo</div>
-          </div>
+          </a>
 
-          <div className="contact-method">
+          <a href="https://github.com/yaskhanloo" target="_blank" rel="noopener noreferrer" className="contact-method">
             <div className="contact-icon">💻</div>
             <div className="contact-label">GitHub</div>
             <div className="contact-value">yaskhanloo</div>
-          </div>
+          </a>
 
-          <div className="contact-method">
+          <a href="https://scholar.google.com/citations?user=yaskhanloo" target="_blank" rel="noopener noreferrer" className="contact-method">
             <div className="contact-icon">🎓</div>
             <div className="contact-label">Scholar</div>
             <div className="contact-value">Google Scholar</div>
-          </div>
+          </a>
         </div>
 
         <div className="contact-note">
